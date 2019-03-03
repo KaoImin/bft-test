@@ -60,7 +60,7 @@ pub struct CommitCollector {
 }
 
 impl CommitCollector {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let mut commit_node: HashSet<u8> = HashSet::new();
         commit_node.insert(0);
         commit_node.insert(1);
