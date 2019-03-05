@@ -16,3 +16,8 @@ pub struct Commit {
     pub height: usize,
     pub result: Vec<u8>,
 }
+
+pub trait Transmit {
+    fn send(&self);
+    fn recv(&self);
+}
