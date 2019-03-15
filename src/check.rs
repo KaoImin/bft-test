@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 use crate::error::ConsensusError;
 
 use lru_cache::LruCache;
