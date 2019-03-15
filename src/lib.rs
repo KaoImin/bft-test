@@ -1,4 +1,3 @@
-
 extern crate criterion;
 extern crate crossbeam;
 extern crate lru_cache;
@@ -43,7 +42,7 @@ pub struct Feed {
 #[derive(Clone, Hash, Eq, PartialEq)]
 pub struct Status<T> {
     pub height: usize,
-    pub authority_list: Vec<T>,  
+    pub authority_list: Vec<T>,
 }
 
 #[derive(Clone, Hash, Eq, PartialEq)]
