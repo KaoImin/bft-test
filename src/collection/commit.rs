@@ -40,7 +40,7 @@ impl HeightCommitCollector {
         let height = commit.height;
         let consequence = commit.result;
 
-        let _ = self.check_correctness(height, consequence.clone())?;
+        self.check_correctness(height, consequence.clone())?;
 
         if self.height_result.contains_key(&height) {
             if consequence != self.height_result[&height] {
@@ -56,7 +56,8 @@ impl HeightCommitCollector {
             self.height_result.insert(height, consequence.clone());
             let mut commit_collector = CommitCollector::new();
             let _ = commit_collector.add(node_id, consequence);
-            self.height_commit_collector.insert(height, commit_collector);
+            self.height_commit_collector
+                .insert(height, commit_collector);
         }
         Ok(())
     }

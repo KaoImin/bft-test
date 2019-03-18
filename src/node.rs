@@ -1,4 +1,3 @@
-use crate::check::HeightCollector;
 use crate::error::ConsensusError;
 use crate::*;
 
@@ -17,7 +16,7 @@ pub struct Node<T, F> {
     pub address: F,
     pub authority_list: Vec<F>,
     pub transmit_channel: HashMap<u32, T>,
-    pub height: usize,  
+    pub height: usize,
     pub result: HashMap<usize, Vec<u8>>,
     pub htime: Instant,
 }
