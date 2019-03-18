@@ -7,6 +7,19 @@ pub mod check;
 pub mod error;
 pub mod node;
 
+#[derive(Clone, PartialEq, Eq)]
+pub enum ProtocolSend<T> {
+    Proposal(Proposal<T>),
+    Vote(Vote<T>),
+    Commit(Commit),
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub enum ProtocolRecv<T> {
+    Feed(Feed),
+    Status(Status<T>),
+}
+
 #[derive(Clone, Hash, Eq, PartialEq)]
 pub struct Proposal<T> {
     pub height: usize,
@@ -72,6 +85,7 @@ pub trait TransformStatus {
 }
 
 pub trait Transmit {
-    fn send(&self);
-    fn recv(&self);
+    fn send2protocol<T: Clone + Eq + PartialEq>(&self, msg: ProtocolRecv<T>);
+    fn send2others<T: Clone + Eq + PartialEq>(&self, msg: ProtocolSend<T>);
+    fn recv<T: Clone + Eq + PartialEq>(&self) -> ProtocolSend<T>;
 }
