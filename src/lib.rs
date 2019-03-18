@@ -3,9 +3,10 @@ extern crate crossbeam;
 extern crate lru_cache;
 extern crate rand;
 
-pub mod check;
+pub mod collection;
 pub mod error;
 pub mod node;
+pub mod verify;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ProtocolSend<T> {

@@ -8,22 +8,22 @@ use std::collections::{HashMap, HashSet};
 // height collector includes at most 20 commit collectors
 // and commit result of each height
 #[derive(Debug)]
-pub struct HeightCollector {
-    pub height_collector: LruCache<usize, CommitCollector>,
+pub struct HeightCommitCollector {
+    pub height_commit_collector: LruCache<usize, CommitCollector>,
     pub height_proposal: HashMap<usize, Vec<u8>>,
     pub height_result: HashMap<usize, Vec<u8>>,
 }
 
-impl Default for check::HeightCollector {
+impl Default for collection::commit::HeightCommitCollector {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl HeightCollector {
+impl HeightCommitCollector {
     pub fn new() -> Self {
-        HeightCollector {
-            height_collector: LruCache::new(20),
+        HeightCommitCollector {
+            height_commit_collector: LruCache::new(20),
             height_proposal: HashMap::new(),
             height_result: HashMap::new(),
         }
@@ -46,7 +46,7 @@ impl HeightCollector {
             if consequence != self.height_result[&height] {
                 return Err(ConsensusError::CommitDiff(height));
             }
-            if let Some(height_commit) = self.height_collector.get_mut(&height) {
+            if let Some(height_commit) = self.height_commit_collector.get_mut(&height) {
                 if !height_commit.add(node_id, consequence) {
                     return Err(ConsensusError::MultipleCommit(height));
                 }
@@ -56,7 +56,7 @@ impl HeightCollector {
             self.height_result.insert(height, consequence.clone());
             let mut commit_collector = CommitCollector::new();
             let _ = commit_collector.add(node_id, consequence);
-            self.height_collector.insert(height, commit_collector);
+            self.height_commit_collector.insert(height, commit_collector);
         }
         Ok(())
     }
@@ -75,8 +75,8 @@ impl HeightCollector {
 
 #[derive(Default, Debug)]
 pub struct CommitCollector {
-    pub commit_collector: Vec<Vec<u8>>,
-    pub do_not_commit: HashSet<u8>,
+    commit_collector: Vec<Vec<u8>>,
+    do_not_commit: HashSet<u8>,
 }
 
 impl CommitCollector {
