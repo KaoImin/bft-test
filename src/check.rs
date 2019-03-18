@@ -1,10 +1,9 @@
-use crate::*;
 use crate::error::ConsensusError;
+use crate::*;
 
 use lru_cache::LruCache;
 
 use std::collections::{HashMap, HashSet};
-use std::str;
 
 // height collector includes at most 20 commit collectors
 // and commit result of each height
