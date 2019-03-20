@@ -10,7 +10,6 @@ use std::collections::{HashMap, HashSet};
 #[derive(Debug)]
 pub struct HeightCommitCollector {
     pub height_commit_collector: LruCache<usize, CommitCollector>,
-    pub height_proposal: HashMap<usize, Vec<u8>>,
     pub height_result: HashMap<usize, Vec<u8>>,
 }
 
@@ -24,23 +23,14 @@ impl HeightCommitCollector {
     pub fn new() -> Self {
         HeightCommitCollector {
             height_commit_collector: LruCache::new(20),
-            height_proposal: HashMap::new(),
             height_result: HashMap::new(),
         }
-    }
-
-    pub fn add_proposal(&mut self, height: usize, proposal: Vec<u8>) {
-        self.height_proposal
-            .entry(height)
-            .or_insert_with(|| proposal);
     }
 
     pub fn add_commit(&mut self, commit: Commit) -> Result<(), ConsensusError> {
         let node_id = commit.node;
         let height = commit.height;
         let consequence = commit.result;
-
-        self.check_correctness(height, consequence.clone())?;
 
         if self.height_result.contains_key(&height) {
             if consequence != self.height_result[&height] {
@@ -58,17 +48,6 @@ impl HeightCommitCollector {
             let _ = commit_collector.add(node_id, consequence);
             self.height_commit_collector
                 .insert(height, commit_collector);
-        }
-        Ok(())
-    }
-
-    fn check_correctness(&self, height: usize, proposal: Vec<u8>) -> Result<(), ConsensusError> {
-        if !self.height_proposal.contains_key(&height) {
-            return Err(ConsensusError::CommitInvalid(height));
-        }
-
-        if Some(&proposal) != self.height_proposal.get(&height) {
-            return Err(ConsensusError::CommitIncorrect(height));
         }
         Ok(())
     }
