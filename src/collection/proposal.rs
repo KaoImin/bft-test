@@ -2,30 +2,24 @@ use crate::*;
 
 use lru_cache::LruCache;
 
-pub struct ProposalCollector<T> {
-    pub proposals: LruCache<usize, ProposalRoundCollector<T>>,
+pub struct ProposalCollector {
+    pub proposals: LruCache<u64, ProposalRoundCollector>,
 }
 
-impl<T> Default for collection::proposal::ProposalCollector<T>
-where
-    T: Clone + Eq + PartialEq,
-{
+impl Default for collection::proposal::ProposalCollector {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> ProposalCollector<T>
-where
-    T: Clone + Eq + PartialEq,
-{
+impl ProposalCollector {
     pub fn new() -> Self {
         ProposalCollector {
             proposals: LruCache::new(20),
         }
     }
 
-    pub fn add(&mut self, proposal: Proposal<T>) -> bool {
+    pub fn add(&mut self, proposal: Proposal) -> bool {
         let height = proposal.clone().height;
         let round = proposal.clone().round;
 
@@ -42,37 +36,31 @@ where
         }
     }
 
-    pub fn get_proposal(&mut self, height: usize, round: usize) -> Option<Proposal<T>> {
+    pub fn get_proposal(&mut self, height: u64, round: u64) -> Option<Proposal> {
         self.proposals
             .get_mut(&height)
             .and_then(|prop| prop.get_proposal(round))
     }
 }
 
-pub struct ProposalRoundCollector<T> {
-    pub round_proposals: LruCache<usize, Proposal<T>>,
+pub struct ProposalRoundCollector {
+    pub round_proposals: LruCache<u64, Proposal>,
 }
 
-impl<T> Default for collection::proposal::ProposalRoundCollector<T>
-where
-    T: Clone + Eq + PartialEq,
-{
+impl Default for collection::proposal::ProposalRoundCollector {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> ProposalRoundCollector<T>
-where
-    T: Clone + Eq + PartialEq,
-{
+impl ProposalRoundCollector {
     pub fn new() -> Self {
         ProposalRoundCollector {
             round_proposals: LruCache::new(20),
         }
     }
 
-    pub fn add(&mut self, round: usize, proposal: Proposal<T>) -> bool {
+    pub fn add(&mut self, round: u64, proposal: Proposal) -> bool {
         if self.round_proposals.contains_key(&round) {
             false
         } else {
@@ -81,7 +69,7 @@ where
         }
     }
 
-    pub fn get_proposal(&mut self, round: usize) -> Option<Proposal<T>> {
+    pub fn get_proposal(&mut self, round: u64) -> Option<Proposal> {
         self.round_proposals.get_mut(&round).cloned()
     }
 }

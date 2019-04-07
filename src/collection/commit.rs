@@ -9,8 +9,8 @@ use std::collections::{HashMap, HashSet};
 // and commit result of each height
 #[derive(Debug)]
 pub struct HeightCommitCollector {
-    pub height_commit_collector: LruCache<usize, CommitCollector>,
-    pub height_result: HashMap<usize, Vec<u8>>,
+    pub height_commit_collector: LruCache<u64, CommitCollector>,
+    pub height_result: HashMap<u64, Vec<u8>>,
 }
 
 impl Default for collection::commit::HeightCommitCollector {

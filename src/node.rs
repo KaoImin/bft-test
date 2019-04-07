@@ -1,77 +1,92 @@
 use crate::error::ConsensusError;
 use crate::*;
 
-use rand::{thread_rng, Rng};
+use crossbeam::crossbeam_channel::Sender;
 
 use std::collections::HashMap;
 use std::{thread::Thread, time::Instant};
 
-const INIT_HEIGHT: usize = 0;
+pub(crate) const INIT_HEIGHT: u64 = 0;
+pub(crate) type FrameResult<T> = Result<T, ConsensusError>;
 
-pub struct Node<T, F> {
-    pub send: T,
-    pub recv: T,
-    pub id: u32,
-    pub thread: Thread,
-    pub address: F,
-    pub authority_list: Vec<F>,
-    pub transmit_channel: HashMap<u32, T>,
-    pub height: usize,
-    pub result: HashMap<usize, Vec<u8>>,
-    pub htime: Instant,
+pub struct Node<T> {
+    transmit: T,
+    id: u32,
+    address: Address,
+    authority_list: Vec<Address>,
+    height: u64,
+    result: HashMap<u64, Vec<u8>>,
+    stime: Instant,
+    htime: Instant,
+
+    send: Sender<CommitInfo>,
 }
 
-impl<T, F> Node<T, F>
+impl<T> Node<T>
 where
     T: Transmit,
-    F: Clone + Eq + PartialEq,
 {
-    pub fn new(s: T, r: T, id: u32, node_thread: Thread, addr: F) -> Self {
+    pub fn new(
+        transmit: T,
+        id: u32,
+        addr: Address,
+        authority_list: Vec<Address>,
+        send: Sender<CommitInfo>,
+    ) -> Self {
         Node {
-            send: s,
-            recv: r,
+            transmit,
             id,
-            thread: node_thread,
             address: addr,
-            authority_list: Vec::new(),
-            transmit_channel: HashMap::new(),
+            authority_list,
             height: INIT_HEIGHT,
             result: HashMap::new(),
+            stime: Instant::now(),
             htime: Instant::now(),
+
+            send,
         }
     }
 
-    pub fn set_authority_list(
-        &mut self,
-        authority_list: Vec<F>,
-        transmit_channel: HashMap<u32, T>,
-    ) {
+    pub fn set_authority_list(&mut self, authority_list: Vec<Address>) {
         self.authority_list = authority_list;
-        self.transmit_channel = transmit_channel;
     }
 
-    fn save_commit(&mut self, commit: Commit) -> Result<(), ConsensusError> {
+    pub fn save_commit(&mut self, commit: Commit) -> FrameResult<()> {
         if self.result.contains_key(&self.height) {
             return Err(ConsensusError::MultipleCommit(self.height));
         }
-
-        self.result.insert(self.height, commit.result);
+        self.result.entry(self.height).or_insert(commit.result);
         Ok(())
     }
 
-    fn transpond_message<U: Clone + Eq + PartialEq>(&self, msg: ProtocolSend<U>) {
-        for channels in self.transmit_channel.values() {
-            channels.send2others(msg.clone());
-        }
+    pub fn set_feed(&self, feed: Feed) -> FrameResult<()> {
+        self.transmit.recv4frame(ProtocolRecv::Feed(feed))?;
+        Ok(())
     }
-}
 
-pub fn generate_proposal() -> Vec<u8> {
-    let mut proposal = vec![1, 2, 3];
-    let mut rng = thread_rng();
-
-    for ii in proposal.iter_mut() {
-        *ii = rng.gen();
+    pub fn send_outside(&self, commit: Commit) -> FrameResult<()> {
+        let mut commit = CommitInfo::from_commit(commit);
+        commit.set_interval(self.htime);
+        commit.set_total_interval(self.stime);
+        self.send.send(commit).unwrap();
+        Ok(())
     }
-    proposal
+
+    pub fn set_status(&mut self, height: u64) -> FrameResult<()> {
+        self.height = height + 1;
+        let s = Status {
+            height,
+            authority_list: self.authority_list.clone(),
+        };
+        self.transmit.recv4frame(ProtocolRecv::Status(s))?;
+        Ok(())
+    }
+
+    pub fn get_height(&self) -> u64 {
+        self.height
+    }
+
+    pub fn stop(&self) -> FrameResult<()> {
+        self.transmit.stop()
+    }
 }

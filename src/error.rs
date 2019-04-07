@@ -1,11 +1,11 @@
 use std::fmt;
 
 pub enum ConsensusError {
-    CommitDiff(usize),
-    CommitIncorrect(usize),
-    CommitInvalid(usize),
-    MislaidCommit(usize),
-    MultipleCommit(usize),
+    CommitDiff(u64),
+    CommitIncorrect(u64),
+    CommitInvalid(u64),
+    MislaidCommit(u64),
+    MultipleCommit(u64),
 }
 
 impl fmt::Display for ConsensusError {

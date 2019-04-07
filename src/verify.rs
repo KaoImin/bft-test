@@ -3,10 +3,10 @@ use crate::*;
 
 use crossbeam::crossbeam_channel::{unbounded, Receiver, Sender};
 
-struct VerifyNoede<T> {
-    send: Sender<ProtocolRecv<T>>,
-    recv: Receiver<ProtocolSend<T>>,
+struct VerifyNoede {
+    send: Sender<ProtocolRecv>,
+    recv: Receiver<ProtocolSend>,
 
-    proposal_collect: ProposalCollector<T>,
+    proposal_collect: ProposalCollector,
     commit_collect: HeightCommitCollector,
 }
