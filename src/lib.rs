@@ -89,6 +89,5 @@ pub trait Support {
     ///
     fn stop(&self);
     ///
-    #[inline(always)]
     fn cal_proposer(&self, height: u64, round: u64) -> usize;
 }

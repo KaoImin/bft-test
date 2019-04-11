@@ -14,6 +14,7 @@ pub struct Actuator<T> {
     height: u64,
     round: u64,
     lock_round: Option<u64>,
+    lock_proposal: Option<Vec<u8>>,
     authority_list: Vec<Address>,
     proposal: Vec<u8>,
     byzantine: Vec<Vec<u8>>,
@@ -33,6 +34,7 @@ where
             height,
             round,
             lock_round: None,
+            lock_proposal: None,
             authority_list,
             proposal: Vec::new(),
             byzantine: byzantine_proposal(),
@@ -59,11 +61,12 @@ where
         for case in cases.iter() {
             if case == &SHOULD_COMMIT {
                 if let Some(commit) = self.function.try_get_commit() {
-                    let _ = self.storage.insert(Msg::Commit(commit.clone()));
+                    let _ = self.storage_msg(Msg::Commit(commit.clone()));
                     self.check_commit(commit)?;
                 }
             } else if case == &NO_COMMIT_BUT_LOCK {
                 if self.function.try_get_commit().is_some() {
+                    self.lock_proposal = Some(self.proposal.clone());
                     return Err(BftError::CommitInvalid(self.height));
                 }
             } else if case == &NO_COMMIT_NO_LOCK {
@@ -86,7 +89,7 @@ where
                     // TODO cache proposal
                     let proposal =
                         self.generate_proposal(proposer, self.lock_round, Vec::new());
-                    let _ = self.storage.insert(Msg::Proposal(proposal.clone()));
+                    let _ = self.storage_msg(Msg::Proposal(proposal.clone()));
                     self.function.send(FrameSend::Proposal(proposal));
                     self.generate_vote(prevote, precommit);
                 } else {
@@ -149,7 +152,7 @@ where
                     proposal: self.proposal.clone(),
                     voter: self.authority_list[i + 1].clone(),
                 };
-                let res = self.storage.insert(Msg::Vote(vote.clone()));
+                let res = self.storage_msg(Msg::Vote(vote.clone()));
                 if res.is_err() {
                     panic!("SQLite Error {:?}", res);
                 }
@@ -167,7 +170,7 @@ where
                     proposal: self.proposal.clone(),
                     voter: self.authority_list[i + 1].clone(),
                 };
-                let res = self.storage.insert(Msg::Vote(vote.clone()));
+                let res = self.storage_msg(Msg::Vote(vote.clone()));
                 if res.is_err() {
                     panic!("SQLite Error {:?}", res);
                 }
@@ -184,7 +187,7 @@ where
         Ok(())
     }
 
-    fn stroage_msg(&self, msg: Msg) -> FrameResult<()> {
+    fn storage_msg(&self, msg: Msg) -> FrameResult<()> {
         let res = self.storage.insert(msg);
         if res.is_err() {
             panic!("SQLite Error {:?}", res);

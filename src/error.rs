@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[derive(Debug)]
 pub enum BftError {
     CommitDiff(u64),
     CommitIncorrect(u64),
@@ -27,6 +28,7 @@ impl fmt::Display for BftError {
     }
 }
 
+#[derive(Debug)]
 pub enum FrameError {
     SQLiteErr(usize),
 }

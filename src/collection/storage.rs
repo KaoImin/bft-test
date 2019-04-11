@@ -1,9 +1,6 @@
-use crate::{collection::util::*, BftResult, Commit, FrameResult, Proposal, Vote};
+use crate::{collection::util::*, Commit, Proposal, Vote};
 
-use SQLite::{
-    types::ToSql,
-    {params, Connection, Result},
-};
+use SQLite::{params, Connection, Result};
 
 pub(crate) struct Storage(Connection);
 
