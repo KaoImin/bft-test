@@ -1,6 +1,6 @@
 use std::fmt;
 
-pub enum ConsensusError {
+pub enum BftError {
     CommitDiff(u64),
     CommitIncorrect(u64),
     CommitInvalid(u64),
@@ -8,20 +8,18 @@ pub enum ConsensusError {
     MultipleCommit(u64),
 }
 
-impl fmt::Display for ConsensusError {
+impl fmt::Display for BftError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg: String = match *self {
-            ConsensusError::CommitDiff(height) => {
-                format!("Commit Different at Height {:?}", height)
-            }
-            ConsensusError::CommitIncorrect(height) => {
+            BftError::CommitDiff(height) => format!("Commit Different at Height {:?}", height),
+            BftError::CommitIncorrect(height) => {
                 format!("Commit Differ from Proposal at Height {:?}", height)
             }
-            ConsensusError::CommitInvalid(height) => format!("No Proposal at Height {:?}", height),
-            ConsensusError::MislaidCommit(height) => {
+            BftError::CommitInvalid(height) => format!("No Proposal at Height {:?}", height),
+            BftError::MislaidCommit(height) => {
                 format!("Mislaid Commit of Height {:?}", height)
             }
-            ConsensusError::MultipleCommit(height) => {
+            BftError::MultipleCommit(height) => {
                 format!("Multiple Commit at Height {:?}", height)
             }
         };

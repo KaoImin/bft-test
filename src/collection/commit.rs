@@ -1,4 +1,4 @@
-use crate::error::ConsensusError;
+use crate::error::BftError;
 use crate::*;
 
 use lru_cache::LruCache;
@@ -27,18 +27,18 @@ impl HeightCommitCollector {
         }
     }
 
-    pub fn add_commit(&mut self, commit: Commit) -> Result<(), ConsensusError> {
+    pub fn add_commit(&mut self, commit: Commit) -> Result<(), BftError> {
         let node_id = commit.node;
         let height = commit.height;
         let consequence = commit.result;
 
         if self.height_result.contains_key(&height) {
             if consequence != self.height_result[&height] {
-                return Err(ConsensusError::CommitDiff(height));
+                return Err(BftError::CommitDiff(height));
             }
             if let Some(height_commit) = self.height_commit_collector.get_mut(&height) {
                 if !height_commit.add(node_id, consequence) {
-                    return Err(ConsensusError::MultipleCommit(height));
+                    return Err(BftError::MultipleCommit(height));
                 }
             }
         } else {
