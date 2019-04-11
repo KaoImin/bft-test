@@ -8,7 +8,7 @@ extern crate serde_derive;
 extern crate rusqlite as SQLite;
 extern crate time;
 
-use crate::error::BftError;
+use crate::error::{BftError, FrameError};
 
 pub mod actuator;
 pub mod collection;
@@ -17,7 +17,8 @@ pub mod error;
 
 type Hash = Vec<u8>;
 type Address = Vec<u8>;
-pub(crate) type BftResult<T> = Result<T, BftError>;
+pub type BftResult<T> = Result<T, BftError>;
+pub type FrameResult<T> = Result<T, FrameError>;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum FrameRecv {

@@ -2,7 +2,6 @@ use crate::{Address, Hash, Vote, VoteType};
 use lru_cache::LruCache;
 use std::collections::HashMap;
 
-
 #[derive(Debug)]
 pub(crate) struct VoteCache {
     pub(crate) votes: LruCache<u64, RoundCollector>,
