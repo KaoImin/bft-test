@@ -1,2 +1,3 @@
 pub mod commit;
-pub mod proposal;
+pub mod storage;
+pub mod vote_cache;

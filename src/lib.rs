@@ -2,9 +2,13 @@ extern crate criterion;
 extern crate crossbeam;
 extern crate lru_cache;
 extern crate rand;
+extern crate serde_json as Json;
+#[macro_use]
+extern crate serde_derive;
+extern crate rusqlite as SQLite;
+extern crate time;
 
 use crate::error::BftError;
-use std::time::{Duration, Instant};
 
 pub mod actuator;
 pub mod collection;
@@ -15,13 +19,13 @@ type Hash = Vec<u8>;
 type Address = Vec<u8>;
 pub(crate) type BftResult<T> = Result<T, BftError>;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum FrameRecv {
     Proposal(Proposal),
     Vote(Vote),
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum FrameSend {
     Proposal(Proposal),
     Vote(Vote),
@@ -29,7 +33,7 @@ pub enum FrameSend {
     Status(Status),
 }
 
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
 pub struct Proposal {
     pub height: u64,
     pub round: u64,
@@ -39,7 +43,7 @@ pub struct Proposal {
     pub lock_votes: Vec<Vote>,
 }
 
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
 pub struct Vote {
     pub height: u64,
     pub round: u64,
@@ -48,26 +52,26 @@ pub struct Vote {
     pub voter: Address,
 }
 
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
 pub struct Commit {
     pub node: u8,
     pub height: u64,
     pub result: Vec<u8>,
 }
 
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
 pub struct Feed {
     pub height: u64,
     pub proposal: Vec<u8>,
 }
 
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
 pub struct Status {
     pub height: u64,
     pub authority_list: Vec<Address>,
 }
 
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, Eq, PartialEq)]
 pub enum VoteType {
     Prevote,
     Precommit,
