@@ -63,6 +63,8 @@ where
                 if let Some(commit) = self.function.try_get_commit() {
                     let _ = self.storage_msg(Msg::Commit(commit.clone()));
                     self.check_commit(commit)?;
+                    let status = self.generate_status();
+                    self.function.send(FrameSend::Status(status));
                 }
             } else if case == &NO_COMMIT_BUT_LOCK {
                 if self.function.try_get_commit().is_some() {
@@ -109,11 +111,21 @@ where
                 *ii = rng.gen();
             }
         }
-
-        Feed {
+        let res = Feed {
             height: self.height,
             proposal,
-        }
+        };
+        let _ = self.storage_msg(Msg::Feed(res.clone()));
+        res
+    }
+
+    fn generate_status(&self) -> Status {
+        let res = Status {
+            height: self.height,
+            authority_list: self.authority_list.clone(),
+        };
+        let _ = self.storage_msg(Msg::Status(res.clone()));
+        res
     }
 
     fn generate_proposal(
