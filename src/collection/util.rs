@@ -1,4 +1,4 @@
-use crate::{Commit, Proposal, Vote};
+use crate::{Commit, Proposal, Vote, Feed, Status};
 use serde_json::to_string;
 use time::Timespec;
 
@@ -55,6 +55,40 @@ impl StorageCommit {
             timestamp: time::get_time(),
             height: commit.height as i64,
             commit: to_string(&commit).unwrap(),
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub(crate) struct StorageFeed {
+    pub(crate) timestamp: Timespec,
+    pub(crate) height: i64,
+    pub(crate) proposal: String,
+}
+
+impl StorageFeed {
+    pub(crate) fn from_feed(feed: Feed) -> Self {
+        StorageFeed {
+            timestamp: time::get_time(),
+            height: feed.height as i64,
+            proposal: to_string(&feed).unwrap(),
+        }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub(crate) struct StorageStatus {
+    pub(crate) timestamp: Timespec,
+    pub(crate) height: i64,
+    pub(crate) authority: String,
+}
+
+impl StorageStatus {
+    pub(crate) fn from_status(status: Status) -> Self {
+        StorageStatus {
+            timestamp: time::get_time(),
+            height: status.height as i64,
+            authority: to_string(&status).unwrap(),
         }
     }
 }

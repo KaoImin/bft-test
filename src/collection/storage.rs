@@ -1,4 +1,4 @@
-use crate::{collection::util::*, Commit, Proposal, Vote};
+use crate::{collection::util::*, Commit, Proposal, Vote, Feed, Status};
 
 use SQLite::{params, Connection, Result};
 
@@ -8,11 +8,13 @@ pub(crate) enum Msg {
     Proposal(Proposal),
     Vote(Vote),
     Commit(Commit),
+    Feed(Feed),
+    Status(Status),
 }
 
 impl Storage {
     pub(crate) fn new() -> Self {
-        let conn = Connection::open_in_memory().expect("Create SQLite failed!");
+        let conn = Connection::open("db/bft.db").expect("Create SQLite failed!");
         conn.execute(
             "CREATE TABLE proposal (
                 timestamp   TEXT PRIMARY KEY,
@@ -43,6 +45,24 @@ impl Storage {
             params![],
         )
         .expect("Create commit table failed!");
+        conn.execute(
+            "CREATE TABLE feed (
+                timestamp   TEXT PRIMARY KEY,
+                height      INTEGER NOT NULL,
+                proposal    TEXT NOT NULL,
+            )",
+            params![],
+        )
+        .expect("Create vote table failed!");
+        conn.execute(
+            "CREATE TABLE status (
+                timestamp   TEXT PRIMARY KEY,
+                height      INTEGER NOT NULL,
+                authority   TEXT NOT NULL,
+            )",
+            params![],
+        )
+        .expect("Create vote table failed!");
 
         Storage(conn)
     }
@@ -73,79 +93,23 @@ impl Storage {
                     params![c.timestamp, c.height, c.commit],
                 )?;
             }
+            Msg::Feed(f) => {
+                let f = StorageFeed::from_feed(f);
+                self.0.execute(
+                    "INSERT INTO feed (timestamp, height, feed)
+                        VALUES (?1, ?2, ?3)",
+                    params![f.timestamp, f.height, f.proposal],
+                )?;
+            }
+            Msg::Status(s) => {
+                let s = StorageStatus::from_status(s);
+                self.0.execute(
+                    "INSERT INTO status (timestamp, height, status)
+                        VALUES (?1, ?2, ?3)",
+                    params![s.timestamp, s.height, s.authority],
+                )?;
+            }
         }
         Ok(())
     }
 }
-
-// pub struct ProposalCollector {
-//     pub proposals: LruCache<u64, ProposalRoundCollector>,
-// }
-
-// impl Default for ProposalCollector {
-//     fn default() -> Self {
-//         Self::new()
-//     }
-// }
-
-// impl ProposalCollector {
-//     pub fn new() -> Self {
-//         ProposalCollector {
-//             proposals: LruCache::new(20),
-//         }
-//     }
-
-//     pub fn add(&mut self, proposal: Proposal) -> bool {
-//         let height = proposal.clone().height;
-//         let round = proposal.clone().round;
-
-//         if self.proposals.contains_key(&height) {
-//             self.proposals
-//                 .get_mut(&height)
-//                 .unwrap()
-//                 .add(round, proposal)
-//         } else {
-//             let mut round_proposals = ProposalRoundCollector::new();
-//             round_proposals.add(round, proposal);
-//             self.proposals.insert(height, round_proposals);
-//             true
-//         }
-//     }
-
-//     pub fn get_proposal(&mut self, height: u64, round: u64) -> Option<Proposal> {
-//         self.proposals
-//             .get_mut(&height)
-//             .and_then(|prop| prop.get_proposal(round))
-//     }
-// }
-
-// pub struct ProposalRoundCollector {
-//     pub round_proposals: LruCache<u64, Proposal>,
-// }
-
-// impl Default for collection::proposal::ProposalRoundCollector {
-//     fn default() -> Self {
-//         Self::new()
-//     }
-// }
-
-// impl ProposalRoundCollector {
-//     pub fn new() -> Self {
-//         ProposalRoundCollector {
-//             round_proposals: LruCache::new(20),
-//         }
-//     }
-
-//     pub fn add(&mut self, round: u64, proposal: Proposal) -> bool {
-//         if self.round_proposals.contains_key(&round) {
-//             false
-//         } else {
-//             self.round_proposals.insert(round, proposal);
-//             true
-//         }
-//     }
-
-//     pub fn get_proposal(&mut self, round: u64) -> Option<Proposal> {
-//         self.round_proposals.get_mut(&round).cloned()
-//     }
-// }
