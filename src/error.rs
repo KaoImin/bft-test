@@ -23,6 +23,19 @@ impl fmt::Display for BftError {
                 format!("Multiple Commit at Height {:?}", height)
             }
         };
-        f.write_fmt(format_args!("Consensus Error ({})", msg))
+        f.write_fmt(format_args!("BFT Error ({})!", msg))
+    }
+}
+
+pub enum FrameError {
+    SQLiteErr(usize),
+}
+
+impl fmt::Display for FrameError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg: String = match *self {
+            FrameError::SQLiteErr(i) => format!("SQLite Error {:?}", i),
+        };
+        f.write_fmt(format_args!("Frame Error ({})I", msg))
     }
 }
