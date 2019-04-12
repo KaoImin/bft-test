@@ -1,4 +1,4 @@
-use crate::correctness::bft_test::BftTestUnit;
+use crate::whitebox::correctness::test_case::BftTestUnit;
 use rand::{thread_rng, Rng};
 
 pub(crate) fn rand_attribute(attri: u8, base: u8) -> BftTestUnit {

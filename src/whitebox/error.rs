@@ -1,4 +1,4 @@
-use crate::*;
+use crate::whitebox::*;
 use std::fmt;
 
 #[derive(Debug)]

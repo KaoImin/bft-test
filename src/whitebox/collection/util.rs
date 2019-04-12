@@ -1,8 +1,17 @@
-use crate::{Commit, Feed, Proposal, Status, Vote};
+use crate::whitebox::{Commit, Feed, Proposal, Status, Vote};
 use serde_json::to_string;
 use time::Timespec;
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum Msg {
+    Proposal(Proposal),
+    Vote(Vote),
+    Commit(Commit),
+    Feed(Feed),
+    Status(Status),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct StorageProposal {
     pub(crate) timestamp: Timespec,
     pub(crate) height: i64,

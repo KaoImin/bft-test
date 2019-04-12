@@ -1,16 +1,7 @@
-use crate::{collection::util::*, Commit, Feed, Proposal, Status, Vote};
-
+use crate::whitebox::collection::util::*;
 use SQLite::{params, Connection, Result};
 
 pub(crate) struct Storage(Connection);
-
-pub(crate) enum Msg {
-    Proposal(Proposal),
-    Vote(Vote),
-    Commit(Commit),
-    Feed(Feed),
-    Status(Status),
-}
 
 impl Storage {
     pub(crate) fn new(db_path: &str) -> Self {

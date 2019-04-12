@@ -1,8 +1,7 @@
-use crate::*;
-use crate::{
-    collection::{storage::*, vote_cache::VoteCache},
-    correctness::bft_test::*,
-    error::BftError,
+use crate::whitebox::{
+    collection::{storage::*, util::Msg, vote_cache::VoteCache},
+    correctness::test_case::*,
+    error::BftError, *,
 };
 
 use rand::{thread_rng, Rng};
@@ -64,8 +63,15 @@ where
                     self.check_commit(commit)?;
                     let status = self.generate_status();
                     self.function.send(FrameSend::Status(status));
+                    println!(
+                        "Height {:?}, use time {:?}",
+                        self.height,
+                        time::get_time() - self.htime
+                    );
                     self.goto_next_height();
                 }
+            } else if case == &NULL_ROUND {
+                self.goto_next_round();
             } else if case == &NO_COMMIT_BUT_LOCK {
                 self.lock_proposal = Some(self.proposal.clone());
                 self.lock_round = Some(self.round);
@@ -73,12 +79,12 @@ where
                     self.lock_proposal = Some(self.proposal.clone());
                     return Err(BftError::CommitInvalid(self.height));
                 }
-                self.round += 1
+                self.goto_next_round();
             } else if case == &NO_COMMIT_NO_LOCK {
                 if self.function.try_get_commit().is_some() {
                     return Err(BftError::CommitInvalid(self.height));
                 }
-                self.round += 1;
+                self.goto_next_round();
             } else {
                 let prevote = case[0..3].to_vec();
                 let precommit = case[3..6].to_vec();
@@ -279,11 +285,22 @@ where
         self.proposal = Vec::new();
         self.round = 0;
         self.height += 1;
+        self.htime = time::get_time();
+    }
+    
+    fn goto_next_round(&mut self) {
+        if self.lock_round.is_none() {
+            self.proposal = Vec::new();
+        } else {
+            self.proposal = self.lock_proposal.clone().unwrap();
+        }
+        self.round += 1;
     }
 
-    fn init(&self) {
+    fn init(&mut self) {
         let init = self.generate_status();
         let _ = self.storage_msg(Msg::Status(init.clone()));
         self.function.send(FrameSend::Status(init));
+        self.htime = time::get_time();
     }
 }

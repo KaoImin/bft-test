@@ -1,4 +1,4 @@
-use crate::correctness::random::*;
+use crate::whitebox::correctness::random::*;
 ///
 pub type BftTestUnit = [u8; 6];
 ///
@@ -83,12 +83,14 @@ pub fn two_byzantine_one_offline() -> BftTest {
     cases
 }
 
+
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
-    fn test() {
+    fn test_devide() {
         let unit: BftTestUnit = [1, 1, 1, 2, 2, 2];
         let cases: BftTest = vec![unit];
         for c in cases.iter() {
