@@ -1,5 +1,5 @@
 [package]
-name = "BFT-test"
+name = "bft-test"
 version = "0.1.0"
 authors = ["Eason Gao <kaoimin@qq.com>"]
 edition = "2018"

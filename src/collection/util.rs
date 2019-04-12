@@ -1,4 +1,4 @@
-use crate::{Commit, Proposal, Vote, Feed, Status};
+use crate::{Commit, Feed, Proposal, Status, Vote};
 use serde_json::to_string;
 use time::Timespec;
 

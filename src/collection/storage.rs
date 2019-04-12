@@ -1,4 +1,4 @@
-use crate::{collection::util::*, Commit, Proposal, Vote, Feed, Status};
+use crate::{collection::util::*, Commit, Feed, Proposal, Status, Vote};
 
 use SQLite::{params, Connection, Result};
 
@@ -13,8 +13,8 @@ pub(crate) enum Msg {
 }
 
 impl Storage {
-    pub(crate) fn new() -> Self {
-        let conn = Connection::open("db/bft.db").expect("Create SQLite failed!");
+    pub(crate) fn new(db_path: &str) -> Self {
+        let conn = Connection::open(db_path).expect("Create SQLite failed!");
         conn.execute(
             "CREATE TABLE proposal (
                 timestamp   TEXT PRIMARY KEY,

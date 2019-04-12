@@ -1,5 +1,5 @@
 extern crate criterion;
-extern crate crossbeam;
+pub extern crate crossbeam;
 extern crate lru_cache;
 extern crate rand;
 extern crate serde_json as Json;
@@ -20,13 +20,13 @@ type Address = Vec<u8>;
 pub type BftResult<T> = Result<T, BftError>;
 pub type FrameResult<T> = Result<T, FrameError>;
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum FrameRecv {
     Proposal(Proposal),
     Vote(Vote),
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum FrameSend {
     Proposal(Proposal),
     Vote(Vote),
@@ -34,7 +34,7 @@ pub enum FrameSend {
     Status(Status),
 }
 
-#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Proposal {
     pub height: u64,
     pub round: u64,
@@ -44,7 +44,7 @@ pub struct Proposal {
     pub lock_votes: Vec<Vote>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Vote {
     pub height: u64,
     pub round: u64,
@@ -53,20 +53,20 @@ pub struct Vote {
     pub voter: Address,
 }
 
-#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Commit {
     pub node: u8,
     pub height: u64,
     pub result: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Feed {
     pub height: u64,
     pub proposal: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, Eq, PartialEq)]
 pub struct Status {
     pub height: u64,
     pub authority_list: Vec<Address>,
