@@ -83,8 +83,6 @@ pub fn two_byzantine_one_offline() -> BftTest {
     cases
 }
 
-
-
 #[cfg(test)]
 mod test {
     use super::*;

@@ -1,4 +1,3 @@
-extern crate criterion;
 pub extern crate crossbeam;
 extern crate lru_cache;
 extern crate rand;

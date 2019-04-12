@@ -10,8 +10,9 @@ pub enum BftError {
     MultipleCommit(u64),
     ShouldNotPrecommit(u64, u64),
     AbnormalProposal(Proposal),
-    IllegalPrecommit(u64, u64),
-    IllegalPrevote(u64, u64),
+    IllegalVote(Vote),
+    PrecommitErr(u64, u64),
+    PrecommitDiffPoLC(Vote),
 }
 
 impl fmt::Display for BftError {
@@ -29,12 +30,11 @@ impl fmt::Display for BftError {
                 h, r
             ),
             BftError::AbnormalProposal(p) => format!("Abnormal Proposal Occur {:?}", p.clone()),
-            BftError::IllegalPrecommit(h, r) => {
-                format!("Illegal Precommit at Height {:?}, Round {:?}", h, r)
+            BftError::IllegalVote(v) => format!("Illegal Vote {:?}", v),
+            BftError::PrecommitErr(h, r) => {
+                format!("Precommit Error at Height {:?}, ROund {:?}", h, r)
             }
-            BftError::IllegalPrevote(h, r) => {
-                format!("Illegal Prevote at Height {:?}, Round {:?}", h, r)
-            }
+            BftError::PrecommitDiffPoLC(v) => format!("Precommit Different From PoLC {:?}", v),
         };
         f.write_fmt(format_args!("BFT Error ({})!", msg))
     }
