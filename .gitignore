@@ -6,7 +6,3 @@
 **/*.rs.bk
 
 /Cargo.lock
-
-/.editorconfig
-
-db/*
