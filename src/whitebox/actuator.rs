@@ -1,7 +1,8 @@
 use crate::whitebox::{
     collection::{storage::*, util::Msg, vote_cache::VoteCache},
     correctness::test_case::*,
-    error::BftError, *,
+    error::BftError,
+    *,
 };
 
 use rand::{thread_rng, Rng};
@@ -103,8 +104,9 @@ where
                     panic!("Proposer index beyond authority list!");
                 }
                 self.generate_prevote(prevote);
-                self.chenck_prevote()?;
+                self.check_prevote()?;
                 self.generate_precommit(precommit);
+                self.check_precommit()?;
             }
         }
         println!("Total test time; {:?}", time::get_time() - self.stime);
@@ -237,19 +239,17 @@ where
         }
     }
 
-    fn chenck_prevote(&mut self) -> BftResult<()> {
+    fn check_prevote(&mut self) -> BftResult<()> {
         let mut vote;
         match self.function.recv() {
             FrameRecv::Proposal(p) => return Err(BftError::AbnormalProposal(p)),
             FrameRecv::Vote(v) => vote = v,
         }
-        if vote.vote_type == VoteType::Precommit {
-            // check vote type
-            return Err(BftError::IllegalPrecommit(self.height, self.round));
+        if vote.vote_type == VoteType::Precommit || self.byzantine.contains(&vote.proposal) {
+            // check vote type and vote proposal
+            return Err(BftError::IllegalVote(vote));
         }
-        if self.byzantine.contains(&vote.proposal) {
-            return Err(BftError::IllegalPrevote(self.height, self.round));
-        }
+
         if let Some(prevote_set) =
             self.vote_cache
                 .get_voteset(self.height, self.height, VoteType::Prevote)
@@ -258,6 +258,53 @@ where
             if prevote_set.count * 2 < self.authority_list.len() * 3 {
                 return Err(BftError::ShouldNotPrecommit(self.height, self.round));
             }
+        } else {
+            return Err(BftError::IllegalVote(vote));
+        }
+        Ok(())
+    }
+
+    fn check_precommit(&mut self) -> BftResult<()> {
+        let mut vote;
+        match self.function.recv() {
+            FrameRecv::Proposal(p) => return Err(BftError::AbnormalProposal(p)),
+            FrameRecv::Vote(v) => vote = v,
+        }
+        if vote.vote_type == VoteType::Prevote || self.byzantine.contains(&vote.proposal) {
+            // check vote type and vote proposal
+            return Err(BftError::IllegalVote(vote));
+        }
+
+        if let Some(precommit_set) =
+            self.vote_cache
+                .get_voteset(self.height, self.height, VoteType::Prevote)
+        {
+            // check prevote condition
+            if precommit_set.count * 2 < self.authority_list.len() * 3 {
+                return Err(BftError::ShouldNotPrecommit(self.height, self.round));
+            }
+            for (v, count) in precommit_set.votes_by_proposal.iter() {
+                if *count > 2 {
+                    if v != &vote.proposal {
+                        return Err(BftError::PrecommitErr(self.height, self.round));
+                    }
+                    let prevote_set = self
+                        .vote_cache
+                        .get_voteset(self.height, self.round, VoteType::Precommit)
+                        .unwrap();
+                    let polc = prevote_set.extract_polc(
+                        self.height,
+                        self.round,
+                        VoteType::Prevote,
+                        &vote.proposal.clone(),
+                    );
+                    if polc.len() < 3 {
+                        return Err(BftError::PrecommitDiffPoLC(vote));
+                    }
+                }
+            }
+        } else {
+            return Err(BftError::IllegalVote(vote));
         }
         Ok(())
     }
@@ -280,6 +327,7 @@ where
     }
 
     fn goto_next_height(&mut self) {
+        self.vote_cache.clear_prevote_count();
         self.lock_round = None;
         self.lock_proposal = None;
         self.proposal = Vec::new();
@@ -287,7 +335,7 @@ where
         self.height += 1;
         self.htime = time::get_time();
     }
-    
+
     fn goto_next_round(&mut self) {
         if self.lock_round.is_none() {
             self.proposal = Vec::new();
