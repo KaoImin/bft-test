@@ -12,6 +12,7 @@ stages:
 jobs:
   include:
     - stage: Check
+      name: Format
       script:
         - cargo fmt --all -- --check
     - stage: Check
