@@ -5,7 +5,6 @@ authors = ["Eason Gao <kaoimin@qq.com>"]
 edition = "2018"
 
 [dependencies]
-criterion = "0.2"
 crossbeam = "0.7"
 rand = "0.5.5"
 lru-cache = "0.1"

@@ -21,6 +21,7 @@ pub(crate) fn byzantine_proposal() -> Vec<Vec<u8>> {
     ]
 }
 
+///
 pub fn no_byzantine_cases() -> BftTest {
     let mut cases = Vec::new();
     for _i in 0..100 {
@@ -30,6 +31,7 @@ pub fn no_byzantine_cases() -> BftTest {
     cases
 }
 
+///
 pub fn one_offline_cases() -> BftTest {
     let mut cases = Vec::new();
     for _i in 0..100 {
@@ -39,6 +41,7 @@ pub fn one_offline_cases() -> BftTest {
     cases
 }
 
+///
 pub fn one_byzantine_cases() -> BftTest {
     let mut cases = Vec::new();
     for _i in 0..100 {
@@ -48,6 +51,7 @@ pub fn one_byzantine_cases() -> BftTest {
     cases
 }
 
+///
 pub fn two_byzantine_cases() -> BftTest {
     let mut cases = Vec::new();
     for _i in 0..99 {
@@ -59,6 +63,7 @@ pub fn two_byzantine_cases() -> BftTest {
     cases
 }
 
+///
 pub fn two_offline_cases() -> BftTest {
     let mut cases = Vec::new();
     for _i in 0..10 {
@@ -72,6 +77,7 @@ pub fn two_offline_cases() -> BftTest {
     cases
 }
 
+///
 pub fn two_byzantine_one_offline() -> BftTest {
     let mut cases = Vec::new();
     for _i in 0..10 {

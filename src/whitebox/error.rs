@@ -1,17 +1,28 @@
 use crate::whitebox::*;
 use std::fmt;
 
+///
 #[derive(Debug)]
 pub enum BftError {
+    ///
     CommitDiff(u64),
+    ///
     CommitIncorrect(u64),
+    ///
     CommitInvalid(u64),
+    ///
     MislaidCommit(u64),
+    ///
     MultipleCommit(u64),
+    ///
     ShouldNotPrecommit(u64, u64),
+    ///
     AbnormalProposal(Proposal),
+    ///
     IllegalVote(Vote),
+    ///
     PrecommitErr(u64, u64),
+    ///
     PrecommitDiffPoLC(Vote),
 }
 
@@ -40,8 +51,10 @@ impl fmt::Display for BftError {
     }
 }
 
+///
 #[derive(Debug)]
 pub enum FrameError {
+    ///
     SQLiteErr(usize),
 }
 

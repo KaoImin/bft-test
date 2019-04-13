@@ -8,6 +8,7 @@ use crate::whitebox::{
 use rand::{thread_rng, Rng};
 use time::Timespec;
 
+/// A whitebox testing actuator.
 pub struct Actuator<T> {
     function: T,
 
@@ -28,6 +29,7 @@ impl<T> Actuator<T>
 where
     T: Support,
 {
+    /// A function to create a new testing acutator.
     pub fn new(
         function: T,
         height: u64,
@@ -51,10 +53,12 @@ where
         }
     }
 
+    /// A function to set a new authority list.
     pub fn set_authority_list(&mut self, authority_list: Vec<Address>) {
         self.authority_list = authority_list;
     }
 
+    /// A function to do whitebox testing with test cases input.
     pub fn proc_test(&mut self, cases: BftTest) -> BftResult<()> {
         self.init();
         for case in cases.iter() {
