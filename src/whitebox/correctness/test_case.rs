@@ -1,7 +1,9 @@
 use crate::whitebox::correctness::random::*;
-///
+use rand::random;
+
+/// A basic test unit.
 pub type BftTestUnit = [u8; 6];
-///
+/// A BFT test case.
 pub type BftTest = Vec<BftTestUnit>;
 
 pub(crate) const OFFLINE: u8 = 0;
@@ -14,10 +16,9 @@ pub(crate) const NO_COMMIT_NO_LOCK: [u8; 6] = [9, 9, 9, 9, 9, 9];
 
 pub(crate) fn byzantine_proposal() -> Vec<Vec<u8>> {
     vec![
-        vec![0, 0, 0, 0],
-        vec![1, 1, 1, 1],
-        vec![2, 2, 2, 2],
-        vec![3, 3, 3, 3],
+        vec![0, 0, 0, 0, 0, 0],
+        vec![1, 1, 1, 1, 1, 1],
+        vec![2, 2, 2, 2, 2, 2],
     ]
 }
 
@@ -86,6 +87,22 @@ pub fn two_byzantine_one_offline() -> BftTest {
     }
     cases.push([1, 1, 1, 1, 1, 1]);
     cases.push(SHOULD_COMMIT);
+    cases
+}
+
+///
+pub fn round_leap() -> BftTest {
+    let mut cases = Vec::new();
+    for _i in 0..10 {
+        for _j in 0..random::<u8>() {
+            cases.push(rand_two_attribute(OFFLINE, NORMAL));
+            cases.push(NO_COMMIT_NO_LOCK);
+        }
+        cases.push(rand_two_attribute(OFFLINE, NORMAL));
+        cases.push(NO_COMMIT_NO_LOCK);
+        cases.push([1, 1, 1, 1, 1, 1]);
+        cases.push(SHOULD_COMMIT);
+    }
     cases
 }
 

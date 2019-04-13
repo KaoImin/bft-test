@@ -118,7 +118,7 @@ where
     }
 
     fn generate_feed(&self) -> Feed {
-        let mut proposal = vec![0, 0, 0, 0];
+        let mut proposal = vec![0, 0, 0, 0, 0, 0];
         while self.byzantine.contains(&proposal) {
             let mut rng = thread_rng();
             for ii in proposal.iter_mut() {
@@ -148,7 +148,7 @@ where
         lock_round: Option<u64>,
         lock_votes: Vec<Vote>,
     ) -> Proposal {
-        let mut proposal = vec![0, 0, 0, 0];
+        let mut proposal = vec![0, 0, 0, 0, 0, 0];
         while self.byzantine.contains(&proposal) {
             let mut rng = thread_rng();
             for ii in proposal.iter_mut() {
@@ -168,22 +168,29 @@ where
     }
 
     fn generate_prevote(&mut self, prevote: Vec<u8>) {
+        let proposal = if self.lock_proposal.is_none() {
+            self.proposal.clone()
+        } else {
+            self.lock_proposal.clone().unwrap()
+        };
+
         for i in 0..2 {
-            if prevote[i] == 1 {
+            if prevote[i] == NORMAL {
                 let vote = Vote {
                     height: self.height,
                     round: self.round,
                     vote_type: VoteType::Prevote,
-                    proposal: self.proposal.clone(),
+                    proposal: proposal.clone(),
                     voter: self.authority_list[i + 1].clone(),
                 };
+
                 let res = self.storage_msg(Msg::Vote(vote.clone()));
                 if res.is_err() {
                     panic!("SQLite Error {:?}", res);
                 }
                 self.function.send(FrameSend::Vote(vote.clone()));
                 self.vote_cache.add(vote);
-            } else if prevote[i] == 2 {
+            } else if prevote[i] == BYZANTINE {
                 let vote = Vote {
                     height: self.height,
                     round: self.round,
@@ -191,13 +198,14 @@ where
                     proposal: self.byzantine[i].clone(),
                     voter: self.authority_list[i + 1].clone(),
                 };
+
                 let res = self.storage_msg(Msg::Vote(vote.clone()));
                 if res.is_err() {
                     panic!("SQLite Error {:?}", res);
                 }
                 self.function.send(FrameSend::Vote(vote.clone()));
                 self.vote_cache.add(vote);
-            } else if prevote[i] == 0 {
+            } else if prevote[i] == OFFLINE {
                 return;
             } else {
                 panic!("Invalid Test Case! {:?}", prevote);
@@ -206,22 +214,29 @@ where
     }
 
     fn generate_precommit(&mut self, precommit: Vec<u8>) {
+        let proposal = if self.lock_proposal.is_none() {
+            self.proposal.clone()
+        } else {
+            self.lock_proposal.clone().unwrap()
+        };
+
         for i in 0..2 {
-            if precommit[i] == 1 {
+            if precommit[i] == NORMAL {
                 let vote = Vote {
                     height: self.height,
                     round: self.round,
                     vote_type: VoteType::Precommit,
-                    proposal: self.proposal.clone(),
+                    proposal: proposal.clone(),
                     voter: self.authority_list[i + 1].clone(),
                 };
+
                 let res = self.storage_msg(Msg::Vote(vote.clone()));
                 if res.is_err() {
                     panic!("SQLite Error {:?}", res);
                 }
                 self.function.send(FrameSend::Vote(vote.clone()));
                 self.vote_cache.add(vote);
-            } else if precommit[i] == 2 {
+            } else if precommit[i] == BYZANTINE {
                 let vote = Vote {
                     height: self.height,
                     round: self.round,
@@ -229,13 +244,14 @@ where
                     proposal: self.byzantine[i].clone(),
                     voter: self.authority_list[i + 1].clone(),
                 };
+
                 let res = self.storage_msg(Msg::Vote(vote.clone()));
                 if res.is_err() {
                     panic!("SQLite Error {:?}", res);
                 }
                 self.function.send(FrameSend::Vote(vote.clone()));
                 self.vote_cache.add(vote);
-            } else if precommit[i] == 0 {
+            } else if precommit[i] == OFFLINE {
                 return;
             } else {
                 panic!("Invalid Test Case! {:?}", precommit);
