@@ -248,7 +248,7 @@ where
     }
 
     fn check_prevote(&mut self) -> BftResult<()> {
-        let vote = self.handle_vote(VoteType::Prevote)?;
+        let vote = self.reveive_vote(VoteType::Prevote)?;
         let mut clean_flag = true;
 
         if let Some(prevote_set) =
@@ -276,16 +276,16 @@ where
     }
 
     fn check_precommit(&mut self) -> BftResult<()> {
-        let vote = self.handle_vote(VoteType::Precommit)?;
+        let vote = self.reveive_vote(VoteType::Precommit)?;
         if let Some(prevote_set) =
             self.vote_cache
                 .get_voteset(self.height, self.height, VoteType::Prevote)
         {
             // check precommit condition
             self.is_above_threshold(prevote_set.count)?;
-            for (v, count) in prevote_set.votes_by_proposal.iter() {
+            for (p, count) in prevote_set.votes_by_proposal.iter() {
                 if self.is_above_threshold(*count).is_ok() {
-                    if v != &vote.proposal {
+                    if p != &vote.proposal {
                         return Err(BftError::PrecommitErr(self.height, self.round));
                     }
 
@@ -308,14 +308,26 @@ where
 
     fn check_commit(&mut self, commit: Commit) -> BftResult<()> {
         // TODO
-        let hash = commit.result.clone();
-        if hash != self.proposal {
+        if self.byzantine.contains(&commit.result) || self.proposal != commit.result {
             return Err(BftError::CommitIncorrect(self.height));
+        }
+
+        if let Some(precommit_set) =
+            self.vote_cache
+                .get_voteset(self.height, self.round, VoteType::Precommit)
+        {
+            if precommit_set
+                .extract_polc(self.height, self.round, VoteType::Precommit, &commit.result)
+                .len()
+                < 3
+            {
+                return Err(BftError::CommitIncorrect(self.height));
+            }
         }
         Ok(())
     }
 
-    fn handle_vote(&mut self, vote_type: VoteType) -> BftResult<Vote> {
+    fn reveive_vote(&mut self, vote_type: VoteType) -> BftResult<Vote> {
         let mut vote;
         match self.function.recv() {
             FrameRecv::Proposal(p) => return Err(BftError::AbnormalProposal(p)),
