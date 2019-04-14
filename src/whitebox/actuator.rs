@@ -77,16 +77,9 @@ where
                 }
             } else if case == &NULL_ROUND {
                 self.goto_next_round();
-            } else if case == &NO_COMMIT_BUT_LOCK {
-                self.lock_proposal = Some(self.proposal.clone());
-                self.lock_round = Some(self.round);
+            } else if case == &SHOULD_NOT_COMMIT {
                 if self.function.try_get_commit().is_some() {
-                    self.lock_proposal = Some(self.proposal.clone());
-                    return Err(BftError::CommitInvalid(self.height));
-                }
-                self.goto_next_round();
-            } else if case == &NO_COMMIT_NO_LOCK {
-                if self.function.try_get_commit().is_some() {
+                    // TODO
                     return Err(BftError::CommitInvalid(self.height));
                 }
                 self.goto_next_round();
@@ -114,6 +107,17 @@ where
             }
         }
         println!("Total test time; {:?}", time::get_time() - self.stime);
+        Ok(())
+    }
+
+    ///
+    pub fn all_test(&mut self) -> BftResult<()> {
+        let all_test_cases = all_cases();
+        for (test_name, test_case) in all_test_cases.into_iter() {
+            println!("Do test {:?}", test_name);
+            self.proc_test(test_case)?;
+        }
+        println!("All test cases success");
         Ok(())
     }
 
@@ -370,9 +374,7 @@ where
 
     fn goto_next_height(&mut self) {
         self.vote_cache.clear_prevote_count();
-        self.lock_round = None;
-        self.lock_proposal = None;
-        self.proposal = Vec::new();
+        self.clean_polc();
         self.round = 0;
         self.height += 1;
         self.htime = time::get_time();
