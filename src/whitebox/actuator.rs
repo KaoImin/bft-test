@@ -64,7 +64,7 @@ where
         for case in cases.iter() {
             if case == &SHOULD_COMMIT {
                 if let Some(commit) = self.function.try_get_commit() {
-                    let _ = self.storage_msg(Msg::Commit(commit.clone()));
+                    self.storage_msg(Msg::Commit(commit.clone()));
                     self.check_commit(commit)?;
                     let status = self.generate_status();
                     self.function.send(FrameSend::Status(status));
@@ -102,7 +102,7 @@ where
                 } else if proposer < self.authority_list.len() {
                     // TODO cache proposal
                     let proposal = self.generate_proposal(proposer, self.lock_round, Vec::new());
-                    let _ = self.storage_msg(Msg::Proposal(proposal.clone()));
+                    self.storage_msg(Msg::Proposal(proposal.clone()));
                     self.function.send(FrameSend::Proposal(proposal));
                 } else {
                     panic!("Proposer index beyond authority list!");
@@ -129,7 +129,7 @@ where
             height: self.height,
             proposal,
         };
-        let _ = self.storage_msg(Msg::Feed(res.clone()));
+        self.storage_msg(Msg::Feed(res.clone()));
         res
     }
 
@@ -138,7 +138,7 @@ where
             height: self.height,
             authority_list: self.authority_list.clone(),
         };
-        let _ = self.storage_msg(Msg::Status(res.clone()));
+        self.storage_msg(Msg::Status(res.clone()));
         res
     }
 
@@ -184,10 +184,7 @@ where
                     voter: self.authority_list[i + 1].clone(),
                 };
 
-                let res = self.storage_msg(Msg::Vote(vote.clone()));
-                if res.is_err() {
-                    panic!("SQLite Error {:?}", res);
-                }
+                self.storage_msg(Msg::Vote(vote.clone()));
                 self.function.send(FrameSend::Vote(vote.clone()));
                 self.vote_cache.add(vote);
             } else if prevote[i] == BYZANTINE {
@@ -199,10 +196,7 @@ where
                     voter: self.authority_list[i + 1].clone(),
                 };
 
-                let res = self.storage_msg(Msg::Vote(vote.clone()));
-                if res.is_err() {
-                    panic!("SQLite Error {:?}", res);
-                }
+                self.storage_msg(Msg::Vote(vote.clone()));
                 self.function.send(FrameSend::Vote(vote.clone()));
                 self.vote_cache.add(vote);
             } else if prevote[i] == OFFLINE {
@@ -230,10 +224,7 @@ where
                     voter: self.authority_list[i + 1].clone(),
                 };
 
-                let res = self.storage_msg(Msg::Vote(vote.clone()));
-                if res.is_err() {
-                    panic!("SQLite Error {:?}", res);
-                }
+                self.storage_msg(Msg::Vote(vote.clone()));
                 self.function.send(FrameSend::Vote(vote.clone()));
                 self.vote_cache.add(vote);
             } else if precommit[i] == BYZANTINE {
@@ -245,10 +236,7 @@ where
                     voter: self.authority_list[i + 1].clone(),
                 };
 
-                let res = self.storage_msg(Msg::Vote(vote.clone()));
-                if res.is_err() {
-                    panic!("SQLite Error {:?}", res);
-                }
+                self.storage_msg(Msg::Vote(vote.clone()));
                 self.function.send(FrameSend::Vote(vote.clone()));
                 self.vote_cache.add(vote);
             } else if precommit[i] == OFFLINE {
@@ -260,58 +248,47 @@ where
     }
 
     fn check_prevote(&mut self) -> BftResult<()> {
-        let mut vote;
-        match self.function.recv() {
-            FrameRecv::Proposal(p) => return Err(BftError::AbnormalProposal(p)),
-            FrameRecv::Vote(v) => vote = v,
-        }
-        if vote.vote_type == VoteType::Precommit || self.byzantine.contains(&vote.proposal) {
-            // check vote type and vote proposal
-            return Err(BftError::IllegalVote(vote));
-        }
+        let vote = self.handle_vote(VoteType::Prevote)?;
+        let mut clean_flag = true;
 
         if let Some(prevote_set) =
             self.vote_cache
                 .get_voteset(self.height, self.height, VoteType::Prevote)
         {
             // check prevote condition
-            if prevote_set.count * 2 < self.authority_list.len() * 3 {
-                return Err(BftError::ShouldNotPrecommit(self.height, self.round));
+            for (p, count) in prevote_set.votes_by_proposal {
+                if self.is_above_threshold(count).is_ok() {
+                    clean_flag = false;
+                    if !p.is_empty() {
+                        self.set_polc(p);
+                    } else {
+                        self.clean_polc();
+                    }
+                }
             }
         } else {
             return Err(BftError::IllegalVote(vote));
+        }
+        if clean_flag {
+            self.proposal = Vec::new();
         }
         Ok(())
     }
 
     fn check_precommit(&mut self) -> BftResult<()> {
-        let mut vote;
-        match self.function.recv() {
-            FrameRecv::Proposal(p) => return Err(BftError::AbnormalProposal(p)),
-            FrameRecv::Vote(v) => vote = v,
-        }
-        if vote.vote_type == VoteType::Prevote || self.byzantine.contains(&vote.proposal) {
-            // check vote type and vote proposal
-            return Err(BftError::IllegalVote(vote));
-        }
-
-        if let Some(precommit_set) =
+        let vote = self.handle_vote(VoteType::Precommit)?;
+        if let Some(prevote_set) =
             self.vote_cache
                 .get_voteset(self.height, self.height, VoteType::Prevote)
         {
-            // check prevote condition
-            if precommit_set.count * 2 < self.authority_list.len() * 3 {
-                return Err(BftError::ShouldNotPrecommit(self.height, self.round));
-            }
-            for (v, count) in precommit_set.votes_by_proposal.iter() {
-                if *count > 2 {
+            // check precommit condition
+            self.is_above_threshold(prevote_set.count)?;
+            for (v, count) in prevote_set.votes_by_proposal.iter() {
+                if self.is_above_threshold(*count).is_ok() {
                     if v != &vote.proposal {
                         return Err(BftError::PrecommitErr(self.height, self.round));
                     }
-                    let prevote_set = self
-                        .vote_cache
-                        .get_voteset(self.height, self.round, VoteType::Precommit)
-                        .unwrap();
+
                     let polc = prevote_set.extract_polc(
                         self.height,
                         self.round,
@@ -338,12 +315,45 @@ where
         Ok(())
     }
 
-    fn storage_msg(&self, msg: Msg) -> FrameResult<()> {
-        let res = self.storage.insert(msg);
-        if res.is_err() {
-            panic!("SQLite Error {:?}", res);
+    fn handle_vote(&mut self, vote_type: VoteType) -> BftResult<Vote> {
+        let mut vote;
+        match self.function.recv() {
+            FrameRecv::Proposal(p) => return Err(BftError::AbnormalProposal(p)),
+            FrameRecv::Vote(v) => vote = v,
+        }
+        if vote.vote_type == vote_type || self.byzantine.contains(&vote.proposal) {
+            // check vote type and vote proposal
+            return Err(BftError::IllegalVote(vote));
+        }
+        self.vote_cache.add(vote.clone());
+        self.storage_msg(Msg::Vote(vote.clone()));
+        Ok(vote)
+    }
+
+    fn is_above_threshold(&self, num: usize) -> BftResult<()> {
+        if num * 3 <= self.authority_list.len() * 2 {
+            return Err(BftError::ShouldNotPrecommit(self.height, self.round));
         }
         Ok(())
+    }
+
+    fn set_polc(&mut self, proposal: Vec<u8>) {
+        self.proposal = proposal.clone();
+        self.lock_round = Some(self.round);
+        self.lock_proposal = Some(proposal);
+    }
+
+    fn clean_polc(&mut self) {
+        self.proposal = Vec::new();
+        self.lock_round = None;
+        self.lock_proposal = None;
+    }
+
+    fn storage_msg(&self, msg: Msg) {
+        let res = self.storage.insert(msg.clone());
+        if res.is_err() {
+            panic!("SQLite Error {:?} when insert {:?}", res, msg);
+        }
     }
 
     fn goto_next_height(&mut self) {
@@ -367,7 +377,7 @@ where
 
     fn init(&mut self) {
         let init = self.generate_status();
-        let _ = self.storage_msg(Msg::Status(init.clone()));
+        self.storage_msg(Msg::Status(init.clone()));
         self.function.send(FrameSend::Status(init));
         self.htime = time::get_time();
     }
