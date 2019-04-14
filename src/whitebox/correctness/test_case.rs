@@ -25,7 +25,7 @@ pub(crate) fn byzantine_proposal() -> Vec<Vec<u8>> {
 ///
 pub fn no_byzantine_cases() -> BftTest {
     let mut cases = Vec::new();
-    for _i in 0..100 {
+    for _ in 0..100 {
         cases.push([1, 1, 1, 1, 1, 1]);
         cases.push(SHOULD_COMMIT);
     }
@@ -35,7 +35,7 @@ pub fn no_byzantine_cases() -> BftTest {
 ///
 pub fn one_offline_cases() -> BftTest {
     let mut cases = Vec::new();
-    for _i in 0..100 {
+    for _ in 0..100 {
         cases.push(rand_attribute(OFFLINE, NORMAL));
         cases.push(SHOULD_COMMIT);
     }
@@ -45,7 +45,7 @@ pub fn one_offline_cases() -> BftTest {
 ///
 pub fn one_byzantine_cases() -> BftTest {
     let mut cases = Vec::new();
-    for _i in 0..100 {
+    for _ in 0..100 {
         cases.push(rand_attribute(BYZANTINE, NORMAL));
         cases.push(SHOULD_COMMIT);
     }
@@ -55,7 +55,7 @@ pub fn one_byzantine_cases() -> BftTest {
 ///
 pub fn two_byzantine_cases() -> BftTest {
     let mut cases = Vec::new();
-    for _i in 0..99 {
+    for _ in 0..99 {
         cases.push(rand_two_attribute(BYZANTINE, NORMAL));
         cases.push(NO_COMMIT_NO_LOCK);
     }
@@ -67,7 +67,7 @@ pub fn two_byzantine_cases() -> BftTest {
 ///
 pub fn two_offline_cases() -> BftTest {
     let mut cases = Vec::new();
-    for _i in 0..10 {
+    for _ in 0..10 {
         cases.push(rand_two_attribute(OFFLINE, NORMAL));
         cases.push(NO_COMMIT_NO_LOCK);
         cases.push(NULL_ROUND);
@@ -81,7 +81,7 @@ pub fn two_offline_cases() -> BftTest {
 ///
 pub fn two_byzantine_one_offline() -> BftTest {
     let mut cases = Vec::new();
-    for _i in 0..10 {
+    for _ in 0..10 {
         cases.push(rand_two_attribute(BYZANTINE, OFFLINE));
         cases.push(NO_COMMIT_NO_LOCK);
     }
@@ -93,8 +93,8 @@ pub fn two_byzantine_one_offline() -> BftTest {
 ///
 pub fn round_leap() -> BftTest {
     let mut cases = Vec::new();
-    for _i in 0..10 {
-        for _j in 0..random::<u8>() {
+    for _ in 0..10 {
+        for _ in 0..random::<u8>() {
             cases.push(rand_two_attribute(OFFLINE, NORMAL));
             cases.push(NO_COMMIT_NO_LOCK);
         }
@@ -103,6 +103,23 @@ pub fn round_leap() -> BftTest {
         cases.push([1, 1, 1, 1, 1, 1]);
         cases.push(SHOULD_COMMIT);
     }
+    cases
+}
+
+///
+pub fn lock_proposal() -> BftTest {
+    let mut cases = Vec::new();
+    for _ in 0..100 {
+        if random::<bool>() {
+            cases.push([1, 1, 1, 1, 0, 2]);
+            cases.push(NO_COMMIT_BUT_LOCK);
+        } else {
+            cases.push([1, 2, 0, 1, 2, 0]);
+            cases.push(NO_COMMIT_NO_LOCK);
+        }
+    }
+    cases.push([1, 1, 1, 1, 1, 1]);
+    cases.push(SHOULD_COMMIT);
     cases
 }
 
