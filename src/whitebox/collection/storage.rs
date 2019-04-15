@@ -1,5 +1,5 @@
 use crate::whitebox::collection::util::*;
-use SQLite::{params, Connection, NO_PARAMS, Result};
+use SQLite::{params, Connection, Result, NO_PARAMS};
 
 pub(crate) struct Storage(Connection);
 
