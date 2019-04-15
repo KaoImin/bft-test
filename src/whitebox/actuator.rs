@@ -92,8 +92,8 @@ where
                     let feed = self.generate_feed();
                     self.proposal = feed.proposal.clone();
                     self.function.send(FrameSend::Feed(feed));
+                    self.check_proposal()?;
                 } else if proposer < self.authority_list.len() {
-                    // TODO cache proposal
                     let proposal = self.generate_proposal(proposer, self.lock_round, Vec::new());
                     self.storage_msg(Msg::Proposal(proposal.clone()));
                     self.function.send(FrameSend::Proposal(proposal));
@@ -329,6 +329,23 @@ where
             }
         }
         Ok(())
+    }
+
+    fn check_proposal(&self) -> BftResult<()> {
+        match self.function.recv() {
+            FrameRecv::Proposal(p) => Ok(p),
+            _ => Err(BftError::IllegalProposal(self.height, self.round)),
+        }
+        .and_then(|p| {
+            if self.lock_round.is_some() {
+                if p.lock_round.is_none() || Some(p.content) != self.lock_proposal {
+                    return Err(BftError::IllegalProposal(self.height, self.round));
+                }
+            } else if p.lock_round.is_some() {
+                return Err(BftError::IllegalProposal(self.height, self.round));
+            }
+            Ok(())
+        })
     }
 
     fn reveive_vote(&mut self, vote_type: VoteType) -> BftResult<Vote> {
