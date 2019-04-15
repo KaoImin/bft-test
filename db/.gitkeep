@@ -1,0 +1,5 @@
+# ignore all files in lib/
+db/*
+
+# except for .gitkeep
+!.gitkeep

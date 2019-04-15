@@ -6,3 +6,6 @@
 **/*.rs.bk
 
 /Cargo.lock
+
+# These are SQLite datebase
+db/*.db
