@@ -109,17 +109,34 @@ pub fn round_leap() -> BftTest {
 ///
 pub fn lock_proposal() -> BftTest {
     let mut cases = Vec::new();
-    for _ in 0..100 {
+    for _ in 0..10 {
         if random::<bool>() {
             cases.push([1, 1, 1, 1, 0, 2]);
-            cases.push(SHOULD_NOT_COMMIT);
         } else {
             cases.push([1, 2, 0, 1, 2, 0]);
-            cases.push(SHOULD_NOT_COMMIT);
         }
+        cases.push(SHOULD_NOT_COMMIT);
     }
     cases.push([1, 1, 1, 1, 1, 1]);
     cases.push(SHOULD_COMMIT);
+    cases
+}
+
+///
+pub fn proposal_with_lock() -> BftTest {
+    let mut cases = Vec::new();
+    for _ in 0..10 {
+        cases.push([1, 1, 0, 1, 0, 0]);
+        cases.push(SHOULD_NOT_COMMIT);
+        cases.push([1, 1, 1, 1, 0, 0]);
+        cases.push(SHOULD_NOT_COMMIT);
+        cases.push([1, 1, 0, 1, 0, 0]);
+        cases.push(SHOULD_NOT_COMMIT);
+        cases.push([0, 1, 1, 1, 0, 0]);
+        cases.push(SHOULD_NOT_COMMIT);
+        cases.push([1, 1, 1, 1, 1, 1]);
+        cases.push(SHOULD_COMMIT);
+    }
     cases
 }
 
@@ -149,6 +166,9 @@ pub(crate) fn all_cases() -> HashMap<String, BftTest> {
     test_cases
         .entry("test lock proposal".to_string())
         .or_insert_with(lock_proposal);
+    test_cases
+        .entry("test lock proposal".to_string())
+        .or_insert_with(proposal_with_lock);
     test_cases
 }
 
