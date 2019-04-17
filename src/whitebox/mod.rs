@@ -1,4 +1,5 @@
 use crate::whitebox::error::{BftError, FrameError};
+use serde_derive::{Serialize, Deserialize};
 
 type Hash = Vec<u8>;
 type Address = Vec<u8>;
