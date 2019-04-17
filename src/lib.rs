@@ -4,15 +4,10 @@
 
 #![deny(missing_docs)]
 
-pub extern crate crossbeam;
-extern crate lru_cache;
-extern crate rand;
-extern crate serde_json as Json;
-#[macro_use]
-extern crate serde_derive;
-extern crate rusqlite as SQLite;
-extern crate time;
-
+/// Re-export test cases.
+pub use crate::whitebox::correctness::test_case;
+/// Re-export crossbeam.
+pub use crossbeam;
 /// Blackbox testing module.
 pub mod blackbox;
 /// WhiteBox testing module.
